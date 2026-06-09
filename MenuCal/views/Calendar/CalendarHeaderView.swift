@@ -4,15 +4,20 @@
 //
 //  Created by gp on 2026/6/4.
 //
+
 import AppKit
+import Combine
+import Sparkle
 import SwiftUI
 
 struct CalendarHeaderView: View {
     let month: CalendarMonth
     let onGoToToday: () -> Void
     let onSelectMonth: (Int, Int) -> Void
+    let updater: SPUUpdater
     @Environment(\.openSettings) private var openSettings
     @State private var isPickerPresented = false
+    @State private var canCheckForUpdates = false
 
     var body: some View {
         HStack {
@@ -59,6 +64,13 @@ struct CalendarHeaderView: View {
                 }
 
                 Button {
+                    updater.checkForUpdates()
+                } label: {
+                    Label("检查更新…", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .disabled(!canCheckForUpdates)
+
+                Button {
                     showAbout()
                 } label: {
                     Label("关于", systemImage: "info.circle")
@@ -75,6 +87,9 @@ struct CalendarHeaderView: View {
                 Image(systemName: "ellipsis.calendar")
             }
             .buttonStyle(HoverIconButtonStyle())
+        }
+        .onReceive(updater.publisher(for: \.canCheckForUpdates)) {
+            canCheckForUpdates = $0
         }
     }
 

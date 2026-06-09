@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>MenuCal Updates</title>
+        <link>https://github.com/gp0119/MenuCal</link>
+        <description>MenuCal update feed</description>
+        <language>zh-CN</language>
+    </channel>
+</rss>

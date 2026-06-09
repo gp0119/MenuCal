@@ -1,4 +1,5 @@
 import Combine
+import Sparkle
 import SwiftUI
 
 @MainActor
@@ -37,6 +38,7 @@ struct CalendarMenuView: View {
     @EnvironmentObject private var store: SettingsStore
 
     private let weekStartDay: WeekStartDay
+    private let updater: SPUUpdater
     @StateObject private var model: CalendarMenuModel
 
     // Focus the month a few rows below the top-most week so the next month
@@ -47,8 +49,9 @@ struct CalendarMenuView: View {
     @State private var scrollPosition: ScrollPosition
     @State private var selectedDay: CalendarDay
 
-    init(weekStartDay: WeekStartDay = .sunday) {
+    init(weekStartDay: WeekStartDay = .sunday, updater: SPUUpdater) {
         self.weekStartDay = weekStartDay
+        self.updater = updater
         let model = CalendarMenuModel(weekStartDay: weekStartDay)
         _model = StateObject(wrappedValue: model)
 
@@ -90,7 +93,8 @@ struct CalendarMenuView: View {
             CalendarHeaderView(
                 month: visibleMonth,
                 onGoToToday: resetToCurrentMonth,
-                onSelectMonth: scrollToMonth
+                onSelectMonth: scrollToMonth,
+                updater: updater
             )
             WeekdayHeaderView(weekStartDay: weekStartDay)
             CalendarScrollView(
