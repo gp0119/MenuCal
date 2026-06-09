@@ -21,7 +21,7 @@ struct MenuBarDisplaySettings: Codable, Sendable {
 
     static let `default` = MenuBarDisplaySettings(
         items: MenuBarComponent.allCases.map {
-            MenuBarItem(component: $0, isEnabled: $0 == .icon || $0 == .date)
+            MenuBarItem(component: $0, isEnabled: $0 == .date || $0 == .weekday || $0 == .time)
         },
         showSeconds: false,
         iconStyle: .calendar

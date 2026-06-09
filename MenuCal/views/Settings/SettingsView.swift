@@ -15,10 +15,10 @@ struct SettingsView: View {
                     Label("通用", systemImage: "gearshape")
                 }
 
-            WindowSettingsView()
-                .tabItem {
-                    Label("窗口", systemImage: "macwindow")
-                }
+            // WindowSettingsView()
+            //     .tabItem {
+            //         Label("窗口", systemImage: "macwindow")
+            //     }
 
             MenuBarSettingsView()
                 .tabItem {

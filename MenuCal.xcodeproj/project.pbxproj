@@ -271,7 +271,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = peng.MenuCal;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gp0119.MenuCal;
 				PRODUCT_NAME = MenuCal;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -302,7 +302,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = peng.MenuCal;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gp0119.MenuCal;
 				PRODUCT_NAME = MenuCal;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
