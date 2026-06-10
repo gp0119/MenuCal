@@ -169,6 +169,10 @@ struct CalendarMenuView: View {
         .padding(.trailing, 8)
         .frame(width: 320)
         .background(.regularMaterial)
-        .onDisappear(perform: resetToCurrentMonth)
+        .onDisappear {
+            if !store.remembersLastDisplayedDate {
+                resetToCurrentMonth()
+            }
+        }
     }
 }

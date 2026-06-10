@@ -34,6 +34,10 @@ struct GeneralSettingsView: View {
                 Toggle("显示上午/下午", isOn: $store.showsAMPM)
                     .disabled(store.uses24HourTime)
             }
+
+            Section {
+                Toggle("记住上次展示时间", isOn: $store.remembersLastDisplayedDate)
+            }
         }
         .formStyle(.grouped)
         .onAppear(perform: refreshLoginItemStatus)

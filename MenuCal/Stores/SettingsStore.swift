@@ -26,11 +26,21 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(showsAMPM, forKey: Keys.showsAMPM) }
     }
 
+    @Published var remembersLastDisplayedDate: Bool {
+        didSet {
+            defaults.set(
+                remembersLastDisplayedDate,
+                forKey: Keys.remembersLastDisplayedDate
+            )
+        }
+    }
+
     private enum Keys {
         static let menuBar = "menuBarDisplaySettings"
         static let calendar = "calendarDisplaySettings"
         static let uses24HourTime = "uses24HourTime"
         static let showsAMPM = "showsAMPM"
+        static let remembersLastDisplayedDate = "remembersLastDisplayedDate"
     }
 
     private let defaults: UserDefaults
@@ -46,6 +56,8 @@ final class SettingsStore: ObservableObject {
         ) ?? .default
         uses24HourTime = defaults.object(forKey: Keys.uses24HourTime) as? Bool ?? true
         showsAMPM = defaults.object(forKey: Keys.showsAMPM) as? Bool ?? true
+        remembersLastDisplayedDate =
+            defaults.object(forKey: Keys.remembersLastDisplayedDate) as? Bool ?? false
     }
 
     private func persist<T: Encodable>(_ value: T, forKey key: String) {
