@@ -63,9 +63,14 @@ struct DayCellView: View {
                         .padding(.leading, 3)
                 }
             }
-            .frame(width: 36, height: 38)
-            .frame(maxWidth: .infinity)
-            .frame(height: CalendarGridLayout.dayCellHeight)
+            .frame(
+                width: CalendarGridLayout.dayContentSize,
+                height: CalendarGridLayout.dayContentSize
+            )
+            .frame(
+                width: CalendarGridLayout.dayCellSize,
+                height: CalendarGridLayout.dayCellSize
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

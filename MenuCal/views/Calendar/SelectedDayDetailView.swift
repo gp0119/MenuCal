@@ -16,6 +16,15 @@ struct SelectedDayDetailView: View {
         LunarDateFormatter.shared.solarTermText(for: day.date)
     }
 
+    private var lunarDetailText: String {
+        [lunarText, festivalText, solarTermText]
+            .compactMap { text in
+                guard let text, !text.isEmpty else { return nil }
+                return text
+            }
+            .joined(separator: " · ")
+    }
+
     private var holidayText: String? {
         guard showPublicHolidays else { return nil }
 
@@ -26,38 +35,31 @@ struct SelectedDayDetailView: View {
         }
     }
 
+    private var dateText: String {
+        let date = day.date.formatted(
+            .dateTime
+                .locale(Locale(identifier: "zh_CN"))
+                .year()
+                .month()
+                .day()
+                .weekday(.wide)
+        )
+
+        return "\(date) · 第\(day.weekOfYear)周"
+    }
+
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(
-                    day.date.formatted(
-                        .dateTime
-                            .locale(Locale(identifier: "zh_CN"))
-                            .year()
-                            .month()
-                            .day()
-                            .weekday(.wide)
-                    )
-                )
-                .font(.headline)
+                Text(dateText)
+                    .font(.headline)
 
-                if !lunarText.isEmpty {
-                    Text("农历 \(lunarText)")
+                if !lunarDetailText.isEmpty {
+                    Text(lunarDetailText)
                         .font(.callout)
                         .foregroundStyle(.secondary)
-                }
-
-                if festivalText != nil || solarTermText != nil {
-                    HStack(spacing: 12) {
-                        if let festivalText {
-                            Text("节日 \(festivalText)")
-                        }
-                        if let solarTermText {
-                            Text("节气 \(solarTermText)")
-                        }
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
 

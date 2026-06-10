@@ -13,11 +13,19 @@ struct WeekRowView: View {
     let showLunarCalendar: Bool
     let showSolarTerms: Bool
     let showPublicHolidays: Bool
+    let showWeekNumbers: Bool
     let selectedDayID: String
     let onSelectDay: (CalendarDay) -> Void
 
     var body: some View {
         HStack(spacing: 0) {
+            if showWeekNumbers, let weekOfYear = week.days.first?.weekOfYear {
+                Text("\(weekOfYear)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .frame(width: CalendarGridLayout.weekNumberColumnWidth)
+            }
+
             ForEach(week.days) { day in
                 DayCellView(
                     day: day,
@@ -33,6 +41,6 @@ struct WeekRowView: View {
         .frame(maxWidth: .infinity)
         // Fixed row height keeps every scroll item uniform, so programmatic
         // scrollTo lands precisely without estimating variable month heights.
-        .frame(height: CalendarGridLayout.dayCellHeight)
+        .frame(height: CalendarGridLayout.dayCellSize)
     }
 }

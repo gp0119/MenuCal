@@ -5,6 +5,7 @@ struct CalendarDay: Identifiable, Hashable, Sendable {
     let monthID: String
     let date: Date
     let day: Int
+    let weekOfYear: Int
     let isToday: Bool
     let publicHolidayKind: PublicHolidayKind?
 
@@ -17,6 +18,7 @@ struct CalendarDay: Identifiable, Hashable, Sendable {
     ) {
         self.date = date
         self.day = day
+        self.weekOfYear = calendar.component(.weekOfYear, from: date)
         self.isToday = isToday
         self.publicHolidayKind = publicHolidayKind
 

@@ -37,6 +37,7 @@ struct GeneralSettingsView: View {
 
             Section {
                 Toggle("记住上次展示时间", isOn: $store.remembersLastDisplayedDate)
+                Toggle("显示周数", isOn: $store.showsWeekNumbers)
             }
         }
         .formStyle(.grouped)

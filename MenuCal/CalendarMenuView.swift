@@ -144,7 +144,10 @@ struct CalendarMenuView: View {
                 updater: updater
             )
             .padding(.trailing, CalendarGridLayout.trailingPadding)
-            WeekdayHeaderView(weekStartDay: weekStartDay)
+            WeekdayHeaderView(
+                weekStartDay: weekStartDay,
+                showWeekNumbers: store.showsWeekNumbers
+            )
             CalendarScrollView(
                 scrollPosition: $scrollPosition,
                 weeks: model.weeks,
@@ -152,6 +155,7 @@ struct CalendarMenuView: View {
                 showLunarCalendar: store.calendar.showLunarCalendar,
                 showSolarTerms: store.calendar.showSolarTerms,
                 showPublicHolidays: store.calendar.showPublicHolidays,
+                showWeekNumbers: store.showsWeekNumbers,
                 selectedDayID: selectedDay.id,
                 onSelectDay: { selectedDay = $0 }
             )
@@ -164,10 +168,10 @@ struct CalendarMenuView: View {
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
         }
         .padding(.top, 16)
-        .padding(.leading, 16)
+        .padding(.leading, CalendarGridLayout.menuLeadingPadding)
         .padding(.bottom, 16)
-        .padding(.trailing, 8)
-        .frame(width: 320)
+        .padding(.trailing, CalendarGridLayout.menuTrailingPadding)
+        .frame(width: CalendarGridLayout.windowWidth(showWeekNumbers: store.showsWeekNumbers))
         .background(.regularMaterial)
         .onDisappear {
             if !store.remembersLastDisplayedDate {

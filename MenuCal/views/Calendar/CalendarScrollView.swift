@@ -14,6 +14,7 @@ struct CalendarScrollView: View {
     let showLunarCalendar: Bool
     let showSolarTerms: Bool
     let showPublicHolidays: Bool
+    let showWeekNumbers: Bool
     let selectedDayID: String
     let onSelectDay: (CalendarDay) -> Void
 
@@ -27,6 +28,7 @@ struct CalendarScrollView: View {
                         showLunarCalendar: showLunarCalendar,
                         showSolarTerms: showSolarTerms,
                         showPublicHolidays: showPublicHolidays,
+                        showWeekNumbers: showWeekNumbers,
                         selectedDayID: selectedDayID,
                         onSelectDay: onSelectDay
                     )
