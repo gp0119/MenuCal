@@ -4,18 +4,34 @@ import SwiftUI
 
 @MainActor
 private final class CalendarMenuModel: ObservableObject {
-    let weeks: [CalendarWeek]
-    let today: CalendarDay
-    let fallbackMonth: CalendarMonth
-    let monthsByID: [String: CalendarMonth]
-    let weekIndexByID: [String: Int]
-    let firstDayWeekIDByMonthID: [String: String]
+    private struct Data {
+        let weeks: [CalendarWeek]
+        let fallbackMonth: CalendarMonth
+        let monthsByID: [String: CalendarMonth]
+        let weekIndexByID: [String: Int]
+        let firstDayWeekIDByMonthID: [String: String]
+    }
+
+    @Published private var data: Data
+
+    var weeks: [CalendarWeek] { data.weeks }
+    var today: CalendarDay { data.weeks.lazy.flatMap(\.days).first(where: \.isToday)! }
+    var fallbackMonth: CalendarMonth { data.fallbackMonth }
+    var monthsByID: [String: CalendarMonth] { data.monthsByID }
+    var weekIndexByID: [String: Int] { data.weekIndexByID }
+    var firstDayWeekIDByMonthID: [String: String] { data.firstDayWeekIDByMonthID }
 
     init(weekStartDay: WeekStartDay) {
+        data = Self.makeData(around: .now, weekStartDay: weekStartDay)
+    }
+
+    func regenerate(around date: Date, weekStartDay: WeekStartDay) {
+        data = Self.makeData(around: date, weekStartDay: weekStartDay)
+    }
+
+    private static func makeData(around date: Date, weekStartDay: WeekStartDay) -> Data {
         let generator = CalendarGenerator()
-        let weeks = generator.weeks(weekStartDay: weekStartDay)
-        self.weeks = weeks
-        today = weeks.lazy.flatMap(\.days).first(where: \.isToday)!
+        let weeks = generator.weeks(around: date, weekStartDay: weekStartDay)
 
         var weekIndexByID: [String: Int] = [:]
         var firstDayWeekIDByMonthID: [String: String] = [:]
@@ -25,12 +41,15 @@ private final class CalendarMenuModel: ObservableObject {
                 firstDayWeekIDByMonthID[day.monthID] = week.id
             }
         }
-        self.weekIndexByID = weekIndexByID
-        self.firstDayWeekIDByMonthID = firstDayWeekIDByMonthID
 
-        let months = generator.months()
-        monthsByID = Dictionary(uniqueKeysWithValues: months.map { ($0.id, $0) })
-        fallbackMonth = generator.month(containing: .now) ?? months[months.count / 2]
+        let months = generator.months(around: date)
+        return Data(
+            weeks: weeks,
+            fallbackMonth: generator.month(containing: date) ?? months[months.count / 2],
+            monthsByID: Dictionary(uniqueKeysWithValues: months.map { ($0.id, $0) }),
+            weekIndexByID: weekIndexByID,
+            firstDayWeekIDByMonthID: firstDayWeekIDByMonthID
+        )
     }
 }
 
@@ -71,21 +90,38 @@ struct CalendarMenuView: View {
         return model.monthsByID[monthID] ?? model.fallbackMonth
     }
 
-    private func scrollToMonth(year: Int, month: Int) {
+    private func regenerateAndScrollToMonth(year: Int, month: Int) {
+        guard
+            let date = Calendar.current.date(
+                from: DateComponents(year: year, month: month, day: 1))
+        else {
+            return
+        }
+
+        model.regenerate(around: date, weekStartDay: weekStartDay)
+        Task { @MainActor in
+            await Task.yield()
+            scrollToLoadedMonth(year: year, month: month)
+        }
+    }
+
+    private func scrollToLoadedMonth(year: Int, month: Int) {
         let monthID = String(format: "%04d-%02d", year, month)
         guard let weekID = model.firstDayWeekIDByMonthID[monthID] else { return }
         scrollPosition.scrollTo(id: weekID, anchor: .top)
     }
 
     private func resetToCurrentMonth() {
+        let now = Date.now
+        let components = Calendar.current.dateComponents([.year, .month], from: now)
+        guard let year = components.year, let month = components.month else { return }
+
+        model.regenerate(around: now, weekStartDay: weekStartDay)
         selectedDay = model.today
-        guard
-            let todayMonth = CalendarGenerator().month(containing: .now),
-            let weekID = model.firstDayWeekIDByMonthID[todayMonth.id]
-        else { return }
-        // Uniform week-row heights let a single scrollTo land exactly on the week
-        // holding the month's 1st, even when it is already top-most.
-        scrollPosition.scrollTo(id: weekID, anchor: .top)
+        Task { @MainActor in
+            await Task.yield()
+            scrollToLoadedMonth(year: year, month: month)
+        }
     }
 
     var body: some View {
@@ -93,7 +129,7 @@ struct CalendarMenuView: View {
             CalendarHeaderView(
                 month: visibleMonth,
                 onGoToToday: resetToCurrentMonth,
-                onSelectMonth: scrollToMonth,
+                onSelectMonth: regenerateAndScrollToMonth,
                 updater: updater
             )
             .padding(.trailing, CalendarGridLayout.trailingPadding)

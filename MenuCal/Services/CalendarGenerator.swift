@@ -9,7 +9,7 @@ struct CalendarGenerator {
         self.holidayCalendar = holidayCalendar
     }
 
-    func months(around date: Date = .now, past: Int = 600, future: Int = 600) -> [CalendarMonth] {
+    func months(around date: Date = .now, past: Int = 30, future: Int = 29) -> [CalendarMonth] {
         guard let anchor = startOfMonth(for: date) else { return [] }
 
         return (-past...future).compactMap { offset in
@@ -27,8 +27,8 @@ struct CalendarGenerator {
 
     func weeks(
         around date: Date = .now,
-        past: Int = 600,
-        future: Int = 600,
+        past: Int = 30,
+        future: Int = 29,
         weekStartDay: WeekStartDay = .sunday,
         today: Date = .now
     ) -> [CalendarWeek] {
