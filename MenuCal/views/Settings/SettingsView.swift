@@ -30,6 +30,6 @@ struct SettingsView: View {
                     Label("日历", systemImage: "calendar")
                 }
         }
-        .frame(width: 420, height: 320)
+        .frame(width: 440, height: 480)
     }
 }

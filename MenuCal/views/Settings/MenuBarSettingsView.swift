@@ -14,8 +14,31 @@ struct MenuBarSettingsView: View {
         List {
             Section {
                 ForEach($store.menuBar.items) { $item in
-                    Toggle(item.component.displayName, isOn: $item.isEnabled)
-                        .toggleStyle(.checkbox)
+                    HStack(spacing: 12) {
+                        Toggle(item.component.displayName, isOn: $item.isEnabled)
+                            .toggleStyle(.checkbox)
+
+                        Spacer()
+
+                        if item.component == .icon {
+                            Picker("图标样式", selection: $store.menuBar.iconStyle) {
+                                ForEach(MenuBarIconStyle.allCases) { style in
+                                    iconPreview(style)
+                                        .tag(style)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .frame(width: 52)
+                            .disabled(!item.isEnabled)
+                            .opacity(item.isEnabled ? 1 : 0.55)
+                        }
+
+                        Image(systemName: "line.3.horizontal")
+                            .foregroundStyle(.tertiary)
+                            .help("拖动调整顺序")
+                    }
+                    .padding(.vertical, 2)
                 }
                 .onMove { source, destination in
                     store.menuBar.items.move(fromOffsets: source, toOffset: destination)
@@ -28,24 +51,19 @@ struct MenuBarSettingsView: View {
             }
 
             Section {
-                Picker("图标样式", selection: $store.menuBar.iconStyle) {
-                    ForEach(MenuBarIconStyle.allCases) { style in
-                        Label {
-                            Text(style.displayName)
-                        } icon: {
-                            iconPreview(style)
-                        }
-                        .tag(style)
-                    }
-                }
-                .disabled(!isIconEnabled)
-            }
-
-            Section {
                 Toggle("显示秒", isOn: $store.menuBar.showSeconds)
                     .disabled(!isTimeEnabled)
+                    .opacity(isTimeEnabled ? 1 : 0.55)
+            } header: {
+                Text("时间")
+            } footer: {
+                if !isTimeEnabled {
+                    Text("启用“时间”后可显示秒数。")
+                        .foregroundStyle(.secondary)
+                }
             }
         }
+        .listStyle(.inset)
     }
 
     @ViewBuilder
@@ -55,10 +73,6 @@ struct MenuBarSettingsView: View {
         } else {
             Image(systemName: "calendar")
         }
-    }
-
-    private var isIconEnabled: Bool {
-        store.menuBar.items.contains { $0.component == .icon && $0.isEnabled }
     }
 
     private var isTimeEnabled: Bool {
