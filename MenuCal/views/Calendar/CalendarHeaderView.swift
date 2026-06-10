@@ -24,19 +24,11 @@ struct CalendarHeaderView: View {
             Button {
                 isPickerPresented = true
             } label: {
-                HStack(spacing: 8) {
-                    Text(String(format: "%04d年", month.year))
-
-                    ZStack(alignment: .leading) {
-                        Text("10月")
-                            .hidden()
-
-                        Text("\(month.month)月")
-                    }
-                }
-                .font(.title3)
-                .foregroundStyle(.primary)
-                .contentShape(Rectangle())
+                Text(String(format: "%04d年 %d月", month.year, month.month))
+                    .font(.title3)
+                    .foregroundStyle(.primary)
+                    .frame(width: 90, alignment: .leading)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .popover(isPresented: $isPickerPresented, arrowEdge: .bottom) {
@@ -49,12 +41,12 @@ struct CalendarHeaderView: View {
                 }
             }
 
+            Spacer()
+
             Button(action: onGoToToday) {
-                Image(systemName: "location.circle")
+                Image(systemName: "arrow.uturn.backward")
             }
             .buttonStyle(HoverIconButtonStyle())
-
-            Spacer()
 
             Menu {
                 Button {
@@ -66,7 +58,7 @@ struct CalendarHeaderView: View {
                 Button {
                     updater.checkForUpdates()
                 } label: {
-                    Label("检查更新…", systemImage: "arrow.triangle.2.circlepath")
+                    Label("检查更新", systemImage: "arrow.triangle.2.circlepath")
                 }
                 .disabled(!canCheckForUpdates)
 
@@ -81,10 +73,10 @@ struct CalendarHeaderView: View {
                 Button(role: .destructive) {
                     NSApplication.shared.terminate(nil)
                 } label: {
-                    Label("退出 MenuCal", systemImage: "power")
+                    Label("退出", systemImage: "power")
                 }
             } label: {
-                Image(systemName: "ellipsis.calendar")
+                Image(systemName: "ellipsis")
             }
             .buttonStyle(HoverIconButtonStyle())
         }
