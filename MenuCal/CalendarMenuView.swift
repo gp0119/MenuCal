@@ -74,7 +74,14 @@ struct CalendarMenuView: View {
         let model = CalendarMenuModel(weekStartDay: weekStartDay)
         _model = StateObject(wrappedValue: model)
 
-        _scrollPosition = State(initialValue: ScrollPosition(idType: String.self))
+        var scrollPosition = ScrollPosition(idType: String.self)
+        if
+            let currentMonth = CalendarGenerator().month(containing: .now),
+            let weekID = model.firstDayWeekIDByMonthID[currentMonth.id]
+        {
+            scrollPosition.scrollTo(id: weekID, anchor: .top)
+        }
+        _scrollPosition = State(initialValue: scrollPosition)
         _selectedDay = State(initialValue: model.today)
     }
 
@@ -120,7 +127,11 @@ struct CalendarMenuView: View {
         selectedDay = model.today
         Task { @MainActor in
             await Task.yield()
-            scrollToLoadedMonth(year: year, month: month)
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                scrollToLoadedMonth(year: year, month: month)
+            }
         }
     }
 
@@ -154,6 +165,6 @@ struct CalendarMenuView: View {
         .padding(.trailing, 8)
         .frame(width: 320)
         .background(.regularMaterial)
-        .onAppear(perform: resetToCurrentMonth)
+        .onDisappear(perform: resetToCurrentMonth)
     }
 }
