@@ -5,6 +5,7 @@ struct DayCellView: View {
     let focusedMonthID: String?
     let showLunarCalendar: Bool
     let showSolarTerms: Bool
+    let showPublicHolidays: Bool
     let isSelected: Bool
     let onSelect: (CalendarDay) -> Void
 
@@ -71,11 +72,15 @@ struct DayCellView: View {
     }
 
     private var holidayBadgeText: String? {
-        switch day.publicHolidayKind {
+        switch displayedHolidayKind {
         case .holiday: "休"
         case .workday: "班"
         case nil: nil
         }
+    }
+
+    private var displayedHolidayKind: PublicHolidayKind? {
+        showPublicHolidays ? day.publicHolidayKind : nil
     }
 
     private var cellBackgroundFill: Color? {
@@ -86,7 +91,7 @@ struct DayCellView: View {
             return Color.accentColor.opacity(0.12)
         }
         let emphasis = isInFocusedMonth ? 1.0 : 0.55
-        switch day.publicHolidayKind {
+        switch displayedHolidayKind {
         case .holiday: return Color.red.opacity(0.14 * emphasis)
         case .workday: return Color.orange.opacity(0.14 * emphasis)
         case nil: return nil
@@ -101,7 +106,7 @@ struct DayCellView: View {
             return AnyShapeStyle(Color.accentColor)
         }
         if isInFocusedMonth {
-            switch day.publicHolidayKind {
+            switch displayedHolidayKind {
             case .holiday: return AnyShapeStyle(Color.red)
             case .workday: return AnyShapeStyle(Color.orange)
             case nil: return AnyShapeStyle(.primary)

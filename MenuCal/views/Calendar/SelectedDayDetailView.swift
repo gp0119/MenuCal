@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SelectedDayDetailView: View {
     let day: CalendarDay
+    let showPublicHolidays: Bool
 
     private var lunarText: String {
         LunarDateFormatter.shared.lunarDate(for: day.date)
@@ -16,7 +17,9 @@ struct SelectedDayDetailView: View {
     }
 
     private var holidayText: String? {
-        switch day.publicHolidayKind {
+        guard showPublicHolidays else { return nil }
+
+        return switch day.publicHolidayKind {
         case .holiday: "休息日"
         case .workday: "调休上班"
         case nil: nil

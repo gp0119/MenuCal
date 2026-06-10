@@ -15,6 +15,7 @@ struct CalendarSettingsView: View {
             Section("显示内容") {
                 Toggle("显示农历", isOn: $store.calendar.showLunarCalendar)
                 Toggle("显示节气", isOn: $store.calendar.showSolarTerms)
+                Toggle("显示节假日", isOn: $store.calendar.showPublicHolidays)
             }
 
             Section("每周开始于") {

@@ -151,12 +151,16 @@ struct CalendarMenuView: View {
                 focusedMonthID: visibleMonth.id,
                 showLunarCalendar: store.calendar.showLunarCalendar,
                 showSolarTerms: store.calendar.showSolarTerms,
+                showPublicHolidays: store.calendar.showPublicHolidays,
                 selectedDayID: selectedDay.id,
                 onSelectDay: { selectedDay = $0 }
             )
             Divider()
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
-            SelectedDayDetailView(day: selectedDay)
+            SelectedDayDetailView(
+                day: selectedDay,
+                showPublicHolidays: store.calendar.showPublicHolidays
+            )
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
         }
         .padding(.top, 16)
