@@ -18,6 +18,7 @@ struct WeekdayHeaderView: View {
                     .frame(maxWidth: .infinity)
             }
         }
+        .padding(.trailing, CalendarGridLayout.trailingPadding)
         .frame(maxWidth: .infinity)
     }
 }

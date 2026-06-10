@@ -30,6 +30,7 @@ struct CalendarScrollView: View {
                     )
                 }
             }
+            .padding(.trailing, CalendarGridLayout.trailingPadding)
             .scrollTargetLayout()
         }
         // Every row is one week of uniform height, so ScrollPosition tracks the

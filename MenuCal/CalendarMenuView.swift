@@ -96,6 +96,7 @@ struct CalendarMenuView: View {
                 onSelectMonth: scrollToMonth,
                 updater: updater
             )
+            .padding(.trailing, CalendarGridLayout.trailingPadding)
             WeekdayHeaderView(weekStartDay: weekStartDay)
             CalendarScrollView(
                 scrollPosition: $scrollPosition,
@@ -107,9 +108,14 @@ struct CalendarMenuView: View {
                 onSelectDay: { selectedDay = $0 }
             )
             Divider()
+                .padding(.trailing, CalendarGridLayout.trailingPadding)
             SelectedDayDetailView(day: selectedDay)
+                .padding(.trailing, CalendarGridLayout.trailingPadding)
         }
-        .padding(16)
+        .padding(.top, 16)
+        .padding(.leading, 16)
+        .padding(.bottom, 16)
+        .padding(.trailing, 8)
         .frame(width: 320)
         .background(.regularMaterial)
         .onAppear(perform: resetToCurrentMonth)
