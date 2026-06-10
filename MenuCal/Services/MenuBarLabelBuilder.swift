@@ -7,10 +7,15 @@
 
 import Foundation
 
+struct MenuBarCalendarGlyph: Hashable {
+    let headerText: String?
+    let bodyText: String
+}
+
 struct MenuBarSegment: Identifiable {
     enum Kind {
         case icon(systemName: String)
-        case calendarGlyph(text: String)
+        case calendarGlyph(MenuBarCalendarGlyph)
         case text(String)
     }
 
@@ -74,24 +79,43 @@ enum MenuBarLabelBuilder {
         }
     }
 
-    /// The text drawn inside the calendar glyph for a given icon style, or `nil`
-    /// for the plain calendar symbol. Shared with the settings preview.
-    static func iconGlyphText(for style: MenuBarIconStyle, date: Date) -> String? {
+    /// The content drawn inside the calendar glyph for a given icon style, or
+    /// `nil` for the plain calendar symbol. Shared with the settings picker.
+    static func iconGlyph(for style: MenuBarIconStyle, date: Date) -> MenuBarCalendarGlyph? {
         switch style {
-        case .calendar:
+        case .calendar, .sfDayOfMonth:
             return nil
         case .dayOfMonth:
-            return dayFormatter.string(from: date)
+            return MenuBarCalendarGlyph(
+                headerText: monthFormatter.string(from: date),
+                bodyText: dayFormatter.string(from: date)
+            )
         case .weekday:
-            return narrowWeekdays[calendar.component(.weekday, from: date) - 1]
+            return MenuBarCalendarGlyph(
+                headerText: shortWeekdays[calendar.component(.weekday, from: date) - 1],
+                bodyText: dayFormatter.string(from: date)
+            )
         }
     }
 
-    private static func iconSegment(style: MenuBarIconStyle, date: Date) -> MenuBarSegment {
-        guard let glyph = iconGlyphText(for: style, date: date) else {
-            return MenuBarSegment(id: .icon, kind: .icon(systemName: "calendar"))
+    static func iconSystemName(for style: MenuBarIconStyle, date: Date) -> String? {
+        switch style {
+        case .calendar:
+            return "calendar"
+        case .sfDayOfMonth:
+            return "\(calendar.component(.day, from: date)).calendar"
+        case .dayOfMonth, .weekday:
+            return nil
         }
-        return MenuBarSegment(id: .icon, kind: .calendarGlyph(text: glyph))
+    }
+
+    private static func iconSegment(style: MenuBarIconStyle, date: Date) -> MenuBarSegment? {
+        if let systemName = iconSystemName(for: style, date: date) {
+            return MenuBarSegment(id: .icon, kind: .icon(systemName: systemName))
+        }
+
+        guard let glyph = iconGlyph(for: style, date: date) else { return nil }
+        return MenuBarSegment(id: .icon, kind: .calendarGlyph(glyph))
     }
 
     private static func text(_ component: MenuBarComponent, _ value: String) -> MenuBarSegment? {
@@ -102,7 +126,7 @@ enum MenuBarLabelBuilder {
 
     private static let locale = Locale(identifier: "zh_CN")
     private static let calendar = Calendar(identifier: .gregorian)
-    private static let narrowWeekdays = ["日", "一", "二", "三", "四", "五", "六"]
+    private static let shortWeekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
 
     private static func formatter(_ format: String) -> DateFormatter {
         let formatter = DateFormatter()
@@ -112,6 +136,7 @@ enum MenuBarLabelBuilder {
     }
 
     private static let yearFormatter = formatter("yyyy年")
+    private static let monthFormatter = formatter("M月")
     private static let dayFormatter = formatter("d")
     private static let dateFormatter = formatter("M月d日")
     private static let weekdayFormatter = formatter("EEE")

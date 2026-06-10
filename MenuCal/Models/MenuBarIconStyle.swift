@@ -9,6 +9,7 @@ import Foundation
 
 enum MenuBarIconStyle: String, CaseIterable, Codable, Identifiable, Sendable {
     case calendar
+    case sfDayOfMonth
     case dayOfMonth
     case weekday
 
@@ -17,6 +18,7 @@ enum MenuBarIconStyle: String, CaseIterable, Codable, Identifiable, Sendable {
     var displayName: String {
         switch self {
         case .calendar: "日历图标"
+        case .sfDayOfMonth: "SF 日期图标"
         case .dayOfMonth: "当天日期"
         case .weekday: "星期"
         }

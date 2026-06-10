@@ -7,12 +7,12 @@
 
 import AppKit
 
-// A calendar-shaped icon with a day number / weekday drawn inside, rendered as a
-// template NSImage so it tints with the menu bar. SF Symbols has no day-specific
-// calendar glyph, so it's drawn with AppKit and cached (it only changes daily).
+// Custom date / weekday icons rendered as template images so they tint with the
+// menu bar. SF Symbols has no day-specific calendar glyph, so they are drawn
+// with AppKit and cached (they only change daily).
 @MainActor
 enum MenuBarIconImage {
-    private static var cache: [String: NSImage] = [:]
+    private static var cache: [MenuBarCalendarGlyph: NSImage] = [:]
 
     /// Renders the whole menu bar label (icon + text) into a single template image.
     /// `NSStatusItem` renders a SwiftUI `Text` label via its plain string title and
@@ -25,10 +25,10 @@ enum MenuBarIconImage {
             switch segment.kind {
             case .text(let value):
                 return textImage(NSAttributedString(string: value, attributes: attributes))
-            case .calendarGlyph(let text):
-                return glyph(text)
+            case .calendarGlyph(let glyph):
+                return glyphImage(for: glyph)
             case .icon(let systemName):
-                return symbol(systemName, pointSize: font.pointSize)
+                return symbol(systemName, pointSize: 16)
             }
         }
 
@@ -71,15 +71,62 @@ enum MenuBarIconImage {
         return image
     }
 
-    static func glyph(_ text: String) -> NSImage {
-        if let cached = cache[text] { return cached }
-        let image = draw(text: text)
-        cache[text] = image
+    static func glyphImage(for glyph: MenuBarCalendarGlyph) -> NSImage {
+        if let cached = cache[glyph] { return cached }
+        let image = draw(glyph: glyph)
+        cache[glyph] = image
         return image
     }
 
-    private static func draw(text: String) -> NSImage {
-        let size = NSSize(width: 15, height: 15)
+    private static func draw(glyph: MenuBarCalendarGlyph) -> NSImage {
+        if glyph.headerText != nil {
+            return drawFilledDate(glyph)
+        }
+        return drawOutlinedGlyph(glyph.bodyText)
+    }
+
+    private static func drawFilledDate(_ glyph: MenuBarCalendarGlyph) -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.black.setFill()
+            NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 2.5, yRadius: 2.5).fill()
+
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current?.compositingOperation = .destinationOut
+
+            if let headerText = glyph.headerText {
+                let headerAttributes: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 7, weight: .medium),
+                    .foregroundColor: NSColor.white,
+                ]
+                let header = NSAttributedString(string: headerText, attributes: headerAttributes)
+                let headerSize = header.size()
+                header.draw(at: NSPoint(
+                    x: rect.midX - headerSize.width / 2,
+                    y: 9.1
+                ))
+            }
+
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 9, weight: .medium),
+                .foregroundColor: NSColor.white,
+            ]
+            let body = NSAttributedString(string: glyph.bodyText, attributes: bodyAttributes)
+            let bodySize = body.size()
+            body.draw(at: NSPoint(
+                x: rect.midX - bodySize.width / 2,
+                y: 0.6
+            ))
+
+            NSGraphicsContext.restoreGraphicsState()
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }
+
+    private static func drawOutlinedGlyph(_ text: String) -> NSImage {
+        let size = NSSize(width: 16, height: 16)
         let image = NSImage(size: size, flipped: false) { rect in
             NSColor.black.setStroke()
 
@@ -88,19 +135,19 @@ enum MenuBarIconImage {
             bodyPath.lineWidth = 1.3
             bodyPath.stroke()
 
-            let headerY = body.maxY - 3.5
+            let headerY = body.maxY - 5
             let divider = NSBezierPath()
             divider.move(to: NSPoint(x: body.minX + 1, y: headerY))
             divider.line(to: NSPoint(x: body.maxX - 1, y: headerY))
             divider.lineWidth = 1.1
             divider.stroke()
 
-            let fontSize: CGFloat = text.count > 1 ? 8.5 : 10
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
+            let bodyFontSize: CGFloat = text.count > 1 ? 8 : 9.5
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: bodyFontSize, weight: .bold),
                 .foregroundColor: NSColor.black,
             ]
-            let attributed = NSAttributedString(string: text, attributes: attributes)
+            let attributed = NSAttributedString(string: text, attributes: bodyAttributes)
             let textSize = attributed.size()
             let lower = NSRect(x: body.minX, y: body.minY, width: body.width, height: headerY - body.minY)
             let origin = NSPoint(

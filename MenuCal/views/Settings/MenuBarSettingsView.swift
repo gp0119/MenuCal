@@ -68,10 +68,11 @@ struct MenuBarSettingsView: View {
 
     @ViewBuilder
     private func iconPreview(_ style: MenuBarIconStyle) -> some View {
-        if let glyph = MenuBarLabelBuilder.iconGlyphText(for: style, date: Date()) {
-            Image(nsImage: MenuBarIconImage.glyph(glyph))
-        } else {
-            Image(systemName: "calendar")
+        if let systemName = MenuBarLabelBuilder.iconSystemName(for: style, date: Date()) {
+            Image(systemName: systemName)
+                .font(.system(size: 16))
+        } else if let glyph = MenuBarLabelBuilder.iconGlyph(for: style, date: Date()) {
+            Image(nsImage: MenuBarIconImage.glyphImage(for: glyph))
         }
     }
 
