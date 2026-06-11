@@ -5,6 +5,7 @@
 //  Created by gp on 2026/6/8.
 //
 
+import AppKit
 import Combine
 import Foundation
 
@@ -39,6 +40,13 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(showsWeekNumbers, forKey: Keys.showsWeekNumbers) }
     }
 
+    @Published var appearance: AppAppearance {
+        didSet {
+            defaults.set(appearance.rawValue, forKey: Keys.appearance)
+            Self.applyAppearance(appearance)
+        }
+    }
+
     private enum Keys {
         static let menuBar = "menuBarDisplaySettings"
         static let calendar = "calendarDisplaySettings"
@@ -46,6 +54,7 @@ final class SettingsStore: ObservableObject {
         static let showsAMPM = "showsAMPM"
         static let remembersLastDisplayedDate = "remembersLastDisplayedDate"
         static let showsWeekNumbers = "showsWeekNumbers"
+        static let appearance = "appearance"
     }
 
     private let defaults: UserDefaults
@@ -65,6 +74,16 @@ final class SettingsStore: ObservableObject {
             defaults.object(forKey: Keys.remembersLastDisplayedDate) as? Bool ?? false
         showsWeekNumbers =
             defaults.object(forKey: Keys.showsWeekNumbers) as? Bool ?? false
+        appearance = AppAppearance(
+            rawValue: defaults.string(forKey: Keys.appearance) ?? ""
+        ) ?? .system
+        Self.applyAppearance(appearance)
+    }
+
+    private static func applyAppearance(_ appearance: AppAppearance) {
+        DispatchQueue.main.async {
+            NSApplication.shared.appearance = appearance.nsAppearance
+        }
     }
 
     private func persist<T: Encodable>(_ value: T, forKey key: String) {

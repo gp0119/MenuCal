@@ -16,6 +16,16 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
+            Section("外观") {
+                Picker("模式", selection: $store.appearance) {
+                    ForEach(AppAppearance.allCases) { appearance in
+                        Text(appearance.title)
+                            .tag(appearance)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
             Section {
                 Toggle("登录时自动启动", isOn: launchAtLoginBinding)
             } footer: {
