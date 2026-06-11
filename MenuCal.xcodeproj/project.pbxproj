@@ -100,11 +100,11 @@
 			);
 			mainGroup = E7338B0D2FCFC1DA00467227;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
-			productRefGroup = E7338B172FCFC1DA00467227 /* Products */;
 			packageReferences = (
 				A10000022FCFC1DA00467227 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E7338B172FCFC1DA00467227 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -265,6 +265,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "MenuCal Dev";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -296,6 +297,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MenuCal;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -337,6 +340,7 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		A10000022FCFC1DA00467227 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -355,7 +359,6 @@
 			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
-
 	};
 	rootObject = E7338B0E2FCFC1DA00467227 /* Project object */;
 }
