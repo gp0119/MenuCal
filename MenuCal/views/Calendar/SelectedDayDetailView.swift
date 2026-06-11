@@ -3,6 +3,10 @@ import SwiftUI
 struct SelectedDayDetailView: View {
     let day: CalendarDay
     let showPublicHolidays: Bool
+    let holidayColor: Color
+    let workdayColor: Color
+    let festivalColor: Color
+    let solarTermColor: Color
 
     private var lunarText: String {
         LunarDateFormatter.shared.lunarDate(for: day.date)
@@ -14,15 +18,6 @@ struct SelectedDayDetailView: View {
 
     private var solarTermText: String? {
         LunarDateFormatter.shared.solarTermText(for: day.date)
-    }
-
-    private var lunarDetailText: String {
-        [lunarText, festivalText, solarTermText]
-            .compactMap { text in
-                guard let text, !text.isEmpty else { return nil }
-                return text
-            }
-            .joined(separator: " · ")
     }
 
     private var holidayText: String? {
@@ -54,13 +49,27 @@ struct SelectedDayDetailView: View {
                 Text(dateText)
                     .font(.headline)
 
-                if !lunarDetailText.isEmpty {
-                    Text(lunarDetailText)
-                        .font(.callout)
+                HStack(spacing: 4) {
+                    Text(lunarText)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+
+                    if let festivalText, !festivalText.isEmpty {
+                        Text("·")
+                            .foregroundStyle(.secondary)
+                        Text(festivalText)
+                            .foregroundStyle(festivalColor)
+                    }
+
+                    if let solarTermText, !solarTermText.isEmpty {
+                        Text("·")
+                            .foregroundStyle(.secondary)
+                        Text(solarTermText)
+                            .foregroundStyle(solarTermColor)
+                    }
                 }
+                .font(.callout)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             }
 
             Spacer()
@@ -68,7 +77,9 @@ struct SelectedDayDetailView: View {
             if let holidayText {
                 Text(holidayText)
                     .font(.caption)
-                    .foregroundStyle(day.publicHolidayKind == .holiday ? Color.red : Color.orange)
+                    .foregroundStyle(
+                        day.publicHolidayKind == .holiday ? holidayColor : workdayColor
+                    )
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

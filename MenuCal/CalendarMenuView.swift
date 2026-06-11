@@ -68,6 +68,26 @@ struct CalendarMenuView: View {
     @State private var scrollPosition: ScrollPosition
     @State private var selectedDay: CalendarDay
 
+    private var accentColor: Color {
+        store.calendar.accentColor?.color ?? CalendarColor.defaultAccent.color
+    }
+
+    private var holidayColor: Color {
+        store.calendar.holidayColor?.color ?? CalendarColor.defaultHoliday.color
+    }
+
+    private var workdayColor: Color {
+        store.calendar.workdayColor?.color ?? CalendarColor.defaultWorkday.color
+    }
+
+    private var festivalColor: Color {
+        store.calendar.festivalColor?.color ?? CalendarColor.defaultFestival.color
+    }
+
+    private var solarTermColor: Color {
+        store.calendar.solarTermColor?.color ?? CalendarColor.defaultSolarTerm.color
+    }
+
     init(weekStartDay: WeekStartDay = .sunday, updater: SPUUpdater) {
         self.weekStartDay = weekStartDay
         self.updater = updater
@@ -141,7 +161,8 @@ struct CalendarMenuView: View {
                 month: visibleMonth,
                 onGoToToday: resetToCurrentMonth,
                 onSelectMonth: regenerateAndScrollToMonth,
-                updater: updater
+                updater: updater,
+                accentColor: accentColor
             )
             .padding(.trailing, CalendarGridLayout.trailingPadding)
             WeekdayHeaderView(
@@ -157,13 +178,22 @@ struct CalendarMenuView: View {
                 showPublicHolidays: store.calendar.showPublicHolidays,
                 showWeekNumbers: store.showsWeekNumbers,
                 selectedDayID: selectedDay.id,
+                accentColor: accentColor,
+                holidayColor: holidayColor,
+                workdayColor: workdayColor,
+                festivalColor: festivalColor,
+                solarTermColor: solarTermColor,
                 onSelectDay: { selectedDay = $0 }
             )
             Divider()
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
             SelectedDayDetailView(
                 day: selectedDay,
-                showPublicHolidays: store.calendar.showPublicHolidays
+                showPublicHolidays: store.calendar.showPublicHolidays,
+                holidayColor: holidayColor,
+                workdayColor: workdayColor,
+                festivalColor: festivalColor,
+                solarTermColor: solarTermColor
             )
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
         }

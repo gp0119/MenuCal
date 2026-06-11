@@ -15,6 +15,7 @@ struct CalendarHeaderView: View {
     let onGoToToday: () -> Void
     let onSelectMonth: (Int, Int) -> Void
     let updater: SPUUpdater
+    let accentColor: Color
     @Environment(\.openSettings) private var openSettings
     @State private var isPickerPresented = false
     @State private var canCheckForUpdates = false
@@ -34,7 +35,8 @@ struct CalendarHeaderView: View {
             .popover(isPresented: $isPickerPresented, arrowEdge: .bottom) {
                 MonthYearPickerView(
                     selectedYear: month.year,
-                    selectedMonth: month.month
+                    selectedMonth: month.month,
+                    accentColor: accentColor
                 ) { year, monthValue in
                     isPickerPresented = false
                     onSelectMonth(year, monthValue)
@@ -107,15 +109,22 @@ struct CalendarHeaderView: View {
 private struct MonthYearPickerView: View {
     let selectedYear: Int
     let selectedMonth: Int
+    let accentColor: Color
     let onSelect: (Int, Int) -> Void
 
     @State private var year: Int
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
 
-    init(selectedYear: Int, selectedMonth: Int, onSelect: @escaping (Int, Int) -> Void) {
+    init(
+        selectedYear: Int,
+        selectedMonth: Int,
+        accentColor: Color,
+        onSelect: @escaping (Int, Int) -> Void
+    ) {
         self.selectedYear = selectedYear
         self.selectedMonth = selectedMonth
+        self.accentColor = accentColor
         self.onSelect = onSelect
         _year = State(initialValue: selectedYear)
     }
@@ -157,7 +166,7 @@ private struct MonthYearPickerView: View {
                             .padding(.vertical, 6)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(isSelected ? Color.accentColor.opacity(0.2) : Color.clear)
+                                    .fill(isSelected ? accentColor.opacity(0.2) : Color.clear)
                             )
                             .contentShape(Rectangle())
                     }
