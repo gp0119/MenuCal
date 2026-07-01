@@ -7,6 +7,7 @@ struct DayCellView: View {
     let showSolarTerms: Bool
     let showPublicHolidays: Bool
     let isSelected: Bool
+    let isToday: Bool
     let accentColor: Color
     let holidayColor: Color
     let workdayColor: Color
@@ -49,7 +50,7 @@ struct DayCellView: View {
                         .fill(fill)
                 }
 
-                if day.isToday, !isSelected {
+                if isToday, !isSelected {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(accentColor, lineWidth: 1)
                 }
@@ -110,12 +111,12 @@ struct DayCellView: View {
 
     private var cellBackgroundFill: Color? {
         if isSelected {
-            if day.isToday {
+            if isToday {
                 return accentColor
             }
             return Color.gray.opacity(0.2)
         }
-        if day.isToday {
+        if isToday {
             return accentColor.opacity(0.12)
         }
         let emphasis = isInFocusedMonth ? 1.0 : 0.55
@@ -128,12 +129,12 @@ struct DayCellView: View {
 
     private var foregroundStyle: AnyShapeStyle {
         if isSelected {
-            if day.isToday {
+            if isToday {
                 return AnyShapeStyle(.white)
             }
             return AnyShapeStyle(.primary)
         }
-        if day.isToday {
+        if isToday {
             return AnyShapeStyle(accentColor)
         }
         if isInFocusedMonth {
@@ -148,7 +149,7 @@ struct DayCellView: View {
 
     private func secondaryForegroundStyle(for kind: SecondaryTextKind) -> AnyShapeStyle {
         if isSelected {
-            if day.isToday {
+            if isToday {
                 return AnyShapeStyle(.white)
             }
         }

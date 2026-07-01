@@ -16,6 +16,7 @@ struct CalendarScrollView: View {
     let showPublicHolidays: Bool
     let showWeekNumbers: Bool
     let selectedDayID: String
+    let currentDayID: String
     let accentColor: Color
     let holidayColor: Color
     let workdayColor: Color
@@ -35,6 +36,7 @@ struct CalendarScrollView: View {
                         showPublicHolidays: showPublicHolidays,
                         showWeekNumbers: showWeekNumbers,
                         selectedDayID: selectedDayID,
+                        currentDayID: currentDayID,
                         accentColor: accentColor,
                         holidayColor: holidayColor,
                         workdayColor: workdayColor,

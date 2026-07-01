@@ -15,6 +15,7 @@ struct WeekRowView: View {
     let showPublicHolidays: Bool
     let showWeekNumbers: Bool
     let selectedDayID: String
+    let currentDayID: String
     let accentColor: Color
     let holidayColor: Color
     let workdayColor: Color
@@ -39,6 +40,7 @@ struct WeekRowView: View {
                     showSolarTerms: showSolarTerms,
                     showPublicHolidays: showPublicHolidays,
                     isSelected: day.id == selectedDayID,
+                    isToday: day.id == currentDayID,
                     accentColor: accentColor,
                     holidayColor: holidayColor,
                     workdayColor: workdayColor,

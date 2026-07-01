@@ -21,17 +21,21 @@ private final class CalendarMenuModel: ObservableObject {
     var weekIndexByID: [String: Int] { data.weekIndexByID }
     var firstDayWeekIDByMonthID: [String: String] { data.firstDayWeekIDByMonthID }
 
-    init(weekStartDay: WeekStartDay) {
-        data = Self.makeData(around: .now, weekStartDay: weekStartDay)
+    init(weekStartDay: WeekStartDay, today: Date = .now) {
+        data = Self.makeData(around: today, weekStartDay: weekStartDay, today: today)
     }
 
-    func regenerate(around date: Date, weekStartDay: WeekStartDay) {
-        data = Self.makeData(around: date, weekStartDay: weekStartDay)
+    func regenerate(around date: Date, weekStartDay: WeekStartDay, today: Date = .now) {
+        data = Self.makeData(around: date, weekStartDay: weekStartDay, today: today)
     }
 
-    private static func makeData(around date: Date, weekStartDay: WeekStartDay) -> Data {
+    func day(matching id: String) -> CalendarDay? {
+        data.weeks.lazy.flatMap(\.days).first { $0.id == id }
+    }
+
+    private static func makeData(around date: Date, weekStartDay: WeekStartDay, today: Date) -> Data {
         let generator = CalendarGenerator()
-        let weeks = generator.weeks(around: date, weekStartDay: weekStartDay)
+        let weeks = generator.weeks(around: date, weekStartDay: weekStartDay, today: today)
 
         var weekIndexByID: [String: Int] = [:]
         var firstDayWeekIDByMonthID: [String: String] = [:]
@@ -58,6 +62,7 @@ struct CalendarMenuView: View {
 
     private let weekStartDay: WeekStartDay
     private let updater: SPUUpdater
+    private let currentDate: Date
     @StateObject private var model: CalendarMenuModel
 
     // Focus the month a few rows below the top-most week so the next month
@@ -67,6 +72,7 @@ struct CalendarMenuView: View {
 
     @State private var scrollPosition: ScrollPosition
     @State private var selectedDay: CalendarDay
+    @State private var lastResetDayID: String
 
     private var accentColor: Color {
         store.calendar.accentColor?.color ?? CalendarColor.defaultAccent.color
@@ -88,21 +94,28 @@ struct CalendarMenuView: View {
         store.calendar.solarTermColor?.color ?? CalendarColor.defaultSolarTerm.color
     }
 
-    init(weekStartDay: WeekStartDay = .sunday, updater: SPUUpdater) {
+    init(weekStartDay: WeekStartDay = .sunday, updater: SPUUpdater, currentDate: Date = .now) {
         self.weekStartDay = weekStartDay
         self.updater = updater
-        let model = CalendarMenuModel(weekStartDay: weekStartDay)
+        self.currentDate = currentDate
+        let model = CalendarMenuModel(weekStartDay: weekStartDay, today: currentDate)
         _model = StateObject(wrappedValue: model)
 
         var scrollPosition = ScrollPosition(idType: String.self)
         if
-            let currentMonth = CalendarGenerator().month(containing: .now),
+            let currentMonth = CalendarGenerator().month(containing: currentDate),
             let weekID = model.firstDayWeekIDByMonthID[currentMonth.id]
         {
             scrollPosition.scrollTo(id: weekID, anchor: .top)
         }
         _scrollPosition = State(initialValue: scrollPosition)
         _selectedDay = State(initialValue: model.today)
+        _lastResetDayID = State(initialValue: model.today.id)
+    }
+
+    private var currentDayID: String {
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: currentDate)
+        return String(format: "%04d-%02d-%02d", components.year!, components.month!, components.day!)
     }
 
     private var visibleMonth: CalendarMonth {
@@ -117,6 +130,18 @@ struct CalendarMenuView: View {
         return model.monthsByID[monthID] ?? model.fallbackMonth
     }
 
+    private var displayedSelectedDay: CalendarDay {
+        if
+            !store.remembersLastDisplayedDate,
+            selectedDay.id == lastResetDayID,
+            lastResetDayID != currentDayID,
+            let currentDay = model.day(matching: currentDayID)
+        {
+            return currentDay
+        }
+        return selectedDay
+    }
+
     private func regenerateAndScrollToMonth(year: Int, month: Int) {
         guard
             let date = Calendar.current.date(
@@ -125,7 +150,7 @@ struct CalendarMenuView: View {
             return
         }
 
-        model.regenerate(around: date, weekStartDay: weekStartDay)
+        model.regenerate(around: date, weekStartDay: weekStartDay, today: currentDate)
         Task { @MainActor in
             await Task.yield()
             scrollToLoadedMonth(year: year, month: month)
@@ -138,13 +163,14 @@ struct CalendarMenuView: View {
         scrollPosition.scrollTo(id: weekID, anchor: .top)
     }
 
-    private func resetToCurrentMonth() {
-        let now = Date.now
+    private func resetToCurrentMonth(referenceDate: Date = .now) {
+        let now = referenceDate
         let components = Calendar.current.dateComponents([.year, .month], from: now)
         guard let year = components.year, let month = components.month else { return }
 
-        model.regenerate(around: now, weekStartDay: weekStartDay)
+        model.regenerate(around: now, weekStartDay: weekStartDay, today: now)
         selectedDay = model.today
+        lastResetDayID = model.today.id
         Task { @MainActor in
             await Task.yield()
             var transaction = Transaction(animation: nil)
@@ -159,7 +185,7 @@ struct CalendarMenuView: View {
         VStack(alignment: .leading, spacing: 12) {
             CalendarHeaderView(
                 month: visibleMonth,
-                onGoToToday: resetToCurrentMonth,
+                onGoToToday: { resetToCurrentMonth(referenceDate: currentDate) },
                 onSelectMonth: regenerateAndScrollToMonth,
                 updater: updater,
                 accentColor: accentColor
@@ -177,7 +203,8 @@ struct CalendarMenuView: View {
                 showSolarTerms: store.calendar.showSolarTerms,
                 showPublicHolidays: store.calendar.showPublicHolidays,
                 showWeekNumbers: store.showsWeekNumbers,
-                selectedDayID: selectedDay.id,
+                selectedDayID: displayedSelectedDay.id,
+                currentDayID: currentDayID,
                 accentColor: accentColor,
                 holidayColor: holidayColor,
                 workdayColor: workdayColor,
@@ -188,7 +215,7 @@ struct CalendarMenuView: View {
             Divider()
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
             SelectedDayDetailView(
-                day: selectedDay,
+                day: displayedSelectedDay,
                 showPublicHolidays: store.calendar.showPublicHolidays,
                 holidayColor: holidayColor,
                 workdayColor: workdayColor,
@@ -203,9 +230,23 @@ struct CalendarMenuView: View {
         .padding(.trailing, CalendarGridLayout.menuTrailingPadding)
         .frame(width: CalendarGridLayout.windowWidth(showWeekNumbers: store.showsWeekNumbers))
         .background(.regularMaterial)
+        .onChange(of: currentDayID) { _, _ in
+            if !store.remembersLastDisplayedDate {
+                resetToCurrentMonth(referenceDate: currentDate)
+            }
+        }
+        .onAppear {
+            if
+                !store.remembersLastDisplayedDate,
+                selectedDay.id == lastResetDayID,
+                lastResetDayID != currentDayID
+            {
+                resetToCurrentMonth(referenceDate: currentDate)
+            }
+        }
         .onDisappear {
             if !store.remembersLastDisplayedDate {
-                resetToCurrentMonth()
+                resetToCurrentMonth(referenceDate: currentDate)
             }
         }
     }
