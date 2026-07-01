@@ -193,20 +193,29 @@ function create_dmg() {
 
 function create_appcast_item() {
     local download_url="$1"
-    local enclosure_attrs="url=\"$download_url\" length=\"$(stat -f%z "$DMG_PATH")\" type=\"application/octet-stream\""
+    local file_length
+    local enclosure_attrs="url=\"$download_url\" type=\"application/octet-stream\""
     local sign_update
 
+    file_length="$(stat -f%z "$DMG_PATH")"
     sign_update="$(find_sign_update)"
     if [[ -n "$SPARKLE_KEY_FILE" && -f "$SPARKLE_KEY_FILE" && -n "$sign_update" ]]; then
         local signature
         signature="$("$sign_update" -f "$SPARKLE_KEY_FILE" "$DMG_PATH")"
+        if [[ "$signature" != *' length='* ]]; then
+            signature="$signature length=\"$file_length\""
+        fi
         enclosure_attrs="$enclosure_attrs $signature"
     elif [[ -n "${SPARKLE_KEY:-}" && -n "$sign_update" ]]; then
         local signature
         signature="$(echo "$SPARKLE_KEY" | "$sign_update" -f - "$DMG_PATH")"
+        if [[ "$signature" != *' length='* ]]; then
+            signature="$signature length=\"$file_length\""
+        fi
         enclosure_attrs="$enclosure_attrs $signature"
     else
         echo "Skipping Sparkle signature: SPARKLE_KEY_FILE/SPARKLE_KEY or sign_update is unavailable." >&2
+        enclosure_attrs="$enclosure_attrs length=\"$file_length\""
     fi
 
     {

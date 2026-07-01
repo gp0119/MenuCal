@@ -83,6 +83,13 @@ jobs:
               echo "build/appcast-item.xml does not contain a Sparkle EdDSA signature." >&2
               exit 1
           fi
+          {
+              echo '<?xml version="1.0" encoding="utf-8"?>'
+              echo '<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel>'
+              cat build/appcast-item.xml
+              echo '</channel></rss>'
+          } > "$RUNNER_TEMP/appcast-item-check.xml"
+          ruby -e "require 'rexml/document'; REXML::Document.new(File.read(ARGV.fetch(0)))" "$RUNNER_TEMP/appcast-item-check.xml"
 
       - name: Create or update GitHub Release
         env:
@@ -128,10 +135,31 @@ jobs:
           git fetch origin "$APPCAST_BRANCH"
           git checkout -B "$APPCAST_BRANCH" "origin/$APPCAST_BRANCH"
 
-          if grep -q "<sparkle:version>$APP_BUILD</sparkle:version>" appcast.xml; then
-              echo "appcast.xml already contains build $APP_BUILD."
-              exit 0
-          fi
+          awk -v build="$APP_BUILD" '
+              /<item>/ {
+                  in_item = 1
+                  item = $0 "\n"
+                  drop = 0
+                  next
+              }
+              in_item {
+                  item = item $0 "\n"
+                  if ($0 ~ "<sparkle:version>" build "</sparkle:version>") {
+                      drop = 1
+                  }
+                  if ($0 ~ /<\/item>/) {
+                      if (!drop) {
+                          printf "%s", item
+                      }
+                      in_item = 0
+                      item = ""
+                      drop = 0
+                  }
+                  next
+              }
+              { print }
+          ' appcast.xml > appcast.cleaned.xml
+          mv appcast.cleaned.xml appcast.xml
 
           awk '
               FNR == NR { item = item $0 "\n"; next }
@@ -142,6 +170,7 @@ jobs:
               { print }
           ' "$RUNNER_TEMP/appcast-item.xml" appcast.xml > appcast.xml.tmp
           mv appcast.xml.tmp appcast.xml
+          ruby -e "require 'rexml/document'; REXML::Document.new(File.read(ARGV.fetch(0)))" appcast.xml
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
