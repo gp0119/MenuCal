@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: zsh {0}
+
+jobs:
+  package:
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show toolchain
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcrun --sdk macosx --show-sdk-version
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+
+          tag="$GITHUB_REF_NAME"
+          if [[ "$tag" =~ '^v?([0-9]+\.[0-9]+\.[0-9]+)([-+].*)?$' ]]; then
+              version="$match[1]"
+          else
+              echo "Tag must look like v1.2.3, 1.2.3, or v1.2.3-beta.1." >&2
+              exit 1
+          fi
+
+          build="$(git rev-list --count HEAD)"
+          release_notes_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$tag"
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "release_notes_url=$release_notes_url" >> "$GITHUB_OUTPUT"
+
+      - name: Check Sparkle key
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SPARKLE_KEY:-}" ]]; then
+              echo "Missing repository secret SPARKLE_KEY." >&2
+              exit 1
+          fi
+
+      - name: Package
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_KEY }}
+        run: |
+          set -euo pipefail
+          scripts/package.sh \
+              --version "${{ steps.version.outputs.version }}" \
+              --build "${{ steps.version.outputs.build }}" \
+              --tag "${{ steps.version.outputs.tag }}" \
+              --release-notes "${{ steps.version.outputs.release_notes_url }}" \
+              --ad-hoc
+
+      - name: Verify Sparkle signature
+        run: |
+          set -euo pipefail
+          if ! grep -q 'sparkle:edSignature=' build/appcast-item.xml; then
+              echo "build/appcast-item.xml does not contain a Sparkle EdDSA signature." >&2
+              exit 1
+          fi
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          assets=(
+              build/MenuCal.dmg
+              build/MenuCal.zip
+              build/appcast-item.xml
+          )
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+              gh release upload "$TAG_NAME" "${assets[@]}" --clobber
+          else
+              args=(
+                  release create "$TAG_NAME" "${assets[@]}"
+                  --title "MenuCal $APP_VERSION"
+                  --generate-notes
+                  --verify-tag
+              )
+
+              if [[ "$TAG_NAME" == *alpha* || "$TAG_NAME" == *beta* || "$TAG_NAME" == *rc* || "$TAG_NAME" == *RC* ]]; then
+                  args+=(--prerelease)
+              fi
+
+              gh "${args[@]}"
+          fi
+
+      - name: Update appcast
+        env:
+          APP_BUILD: ${{ steps.version.outputs.build }}
+          APPCAST_BRANCH: main
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          cp build/appcast-item.xml "$RUNNER_TEMP/appcast-item.xml"
+
+          git fetch origin "$APPCAST_BRANCH"
+          git checkout -B "$APPCAST_BRANCH" "origin/$APPCAST_BRANCH"
+
+          if grep -q "<sparkle:version>$APP_BUILD</sparkle:version>" appcast.xml; then
+              echo "appcast.xml already contains build $APP_BUILD."
+              exit 0
+          fi
+
+          awk '
+              FNR == NR { item = item $0 "\n"; next }
+              /<\/channel>/ && !inserted {
+                  printf "%s", item
+                  inserted = 1
+              }
+              { print }
+          ' "$RUNNER_TEMP/appcast-item.xml" appcast.xml > appcast.xml.tmp
+          mv appcast.xml.tmp appcast.xml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add appcast.xml
+          git commit -m "Update appcast for $TAG_NAME"
+          git push origin "HEAD:$APPCAST_BRANCH"
