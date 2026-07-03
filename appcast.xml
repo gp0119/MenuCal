@@ -11,7 +11,7 @@
     <pubDate>Wed, 01 Jul 2026 08:59:22 +0000</pubDate>
     <sparkle:version>20</sparkle:version>
     <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
-    <sparkle:minimumSystemVersion>26.5</sparkle:minimumSystemVersion>
+    <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
     <enclosure url="https://github.com/gp0119/MenuCal/releases/download/v1.0.1/MenuCal.dmg" type="application/octet-stream" sparkle:edSignature="IVSzGtepeYhAAlvoAs3knEW4jVAed6Ho789R20IyUvqNw9fOLkk+SiMAyfzSDeZlUWiHBKfE5bxz6CCkfog8Dg==" length="1832023" />
 </item>
     </channel>

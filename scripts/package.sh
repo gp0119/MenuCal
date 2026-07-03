@@ -14,7 +14,7 @@ DMG_PATH="$BUILD_DIR/$APP_NAME.dmg"
 ZIP_PATH="$BUILD_DIR/$APP_NAME.zip"
 APPCAST_ITEM_PATH="$BUILD_DIR/appcast-item.xml"
 
-MIN_SYSTEM_VERSION="26.5"
+MIN_SYSTEM_VERSION="15.0"
 APP_VERSION=""
 APP_BUILD=""
 APP_TAG_NAME=""
@@ -34,7 +34,7 @@ Options:
   --version VERSION        Marketing version, e.g. 1.0.1.
   --build BUILD           Build number. Defaults to git commit count.
   --tag TAG               Release tag. Defaults to latest git tag, then vVERSION.
-  --min-system VERSION    Sparkle minimum system version. Default: 26.5.
+  --min-system VERSION    Sparkle minimum system version. Default: 15.0.
   --release-notes URL     Optional Sparkle release notes URL.
   --sparkle-key-file PATH Sparkle private key file.
   --ad-hoc                Use ad-hoc signing when you do not have a Developer ID.

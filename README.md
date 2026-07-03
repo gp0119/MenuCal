@@ -27,8 +27,8 @@ MenuCal 是一个使用 SwiftUI 开发的 macOS 菜单栏日历。点击菜单�
 
 ## 系统要求
 
-- macOS 26.5 或更高版本
-- Apple Silicon 或 Intel Mac，取决于下载包包含的架构
+- macOS 15.0 或更高版本
+- Apple Silicon 或 Intel Mac。发布包建议构建为 Universal，以同时包含 `arm64` 和 `x86_64` 架构
 
 ## 下载
 
