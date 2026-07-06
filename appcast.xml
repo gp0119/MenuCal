@@ -21,5 +21,14 @@
     <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
     <enclosure url="https://github.com/gp0119/MenuCal/releases/download/v1.0.2/MenuCal.dmg" type="application/octet-stream" sparkle:edSignature="rytY4f4wlr9BHpWwAyWXuQVidZk0zM0oPVT+kpC7IxqwYj3xrFYTdCKKRToIFmuOm5GaaPomDxZ8ftnMNaQYDw==" length="1840490" />
 </item>
+<item>
+    <title>MenuCal 1.0.3</title>
+    <sparkle:releaseNotesLink>https://github.com/gp0119/MenuCal/releases/tag/v1.0.3</sparkle:releaseNotesLink>
+    <pubDate>Mon, 06 Jul 2026 01:02:51 +0000</pubDate>
+    <sparkle:version>26</sparkle:version>
+    <sparkle:shortVersionString>1.0.3</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+    <enclosure url="https://github.com/gp0119/MenuCal/releases/download/v1.0.3/MenuCal.dmg" type="application/octet-stream" sparkle:edSignature="mJZxjKuIcHczMPxCR3kz9yQB0EgLLpKsVxB7EmW5c1nFhSLr5ZfFtTWCXbo+4FB7uzFvugwVpWfb2Jb7RVa2BQ==" length="1850320" />
+</item>
     </channel>
 </rss>
