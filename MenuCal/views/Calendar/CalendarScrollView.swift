@@ -54,6 +54,7 @@ struct CalendarScrollView: View {
         // single call. The parent maps weeks to months for the header and jumps.
         .scrollPosition($scrollPosition, anchor: .top)
         .scrollBounceBehavior(.basedOnSize)
+        .overlayScrollerStyle()
         .frame(height: CalendarGridLayout.gridHeight)
     }
 }
