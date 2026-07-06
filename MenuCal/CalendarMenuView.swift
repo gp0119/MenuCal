@@ -65,12 +65,11 @@ struct CalendarMenuView: View {
     private let currentDate: Date
     @StateObject private var model: CalendarMenuModel
 
-    // Focus the month a few rows below the top-most week so the next month
-    // lights up while it is still scrolling into view, rather than only once
-    // its 1st reaches the very top.
-    private static let monthFocusLookahead = 2
+    private let initialScrollWeekID: String?
 
-    @State private var scrollPosition: ScrollPosition
+    @State private var scrollRequest: CalendarScrollRequest?
+    @State private var scrollRequestToken = 0
+    @State private var visibleMonth: CalendarMonth
     @State private var selectedDay: CalendarDay
     @State private var lastResetDayID: String
 
@@ -101,14 +100,10 @@ struct CalendarMenuView: View {
         let model = CalendarMenuModel(weekStartDay: weekStartDay, today: currentDate)
         _model = StateObject(wrappedValue: model)
 
-        var scrollPosition = ScrollPosition(idType: String.self)
-        if
-            let currentMonth = CalendarGenerator().month(containing: currentDate),
-            let weekID = model.firstDayWeekIDByMonthID[currentMonth.id]
-        {
-            scrollPosition.scrollTo(id: weekID, anchor: .top)
-        }
-        _scrollPosition = State(initialValue: scrollPosition)
+        let currentMonth = CalendarGenerator().month(containing: currentDate)
+        let initialVisibleMonth = currentMonth ?? model.fallbackMonth
+        initialScrollWeekID = currentMonth.flatMap { model.firstDayWeekIDByMonthID[$0.id] }
+        _visibleMonth = State(initialValue: initialVisibleMonth)
         _selectedDay = State(initialValue: model.today)
         _lastResetDayID = State(initialValue: model.today.id)
     }
@@ -118,14 +113,18 @@ struct CalendarMenuView: View {
         return String(format: "%04d-%02d-%02d", components.year!, components.month!, components.day!)
     }
 
-    private var visibleMonth: CalendarMonth {
+    private func month(focusedBy topWeekID: String?) -> CalendarMonth {
         guard
-            let topWeekID = scrollPosition.viewID(type: String.self),
+            let topWeekID,
             let topIndex = model.weekIndexByID[topWeekID]
         else {
             return model.fallbackMonth
         }
-        let focusIndex = min(topIndex + Self.monthFocusLookahead, model.weeks.count - 1)
+        // Focus the month a few rows below the top-most week so the next month
+        // lights up while it is still scrolling into view, rather than only once
+        // its 1st reaches the very top.
+        let monthFocusLookahead = 2
+        let focusIndex = min(topIndex + monthFocusLookahead, model.weeks.count - 1)
         let monthID = model.weeks[focusIndex].monthID
         return model.monthsByID[monthID] ?? model.fallbackMonth
     }
@@ -160,7 +159,16 @@ struct CalendarMenuView: View {
     private func scrollToLoadedMonth(year: Int, month: Int) {
         let monthID = String(format: "%04d-%02d", year, month)
         guard let weekID = model.firstDayWeekIDByMonthID[monthID] else { return }
-        scrollPosition.scrollTo(id: weekID, anchor: .top)
+        requestScroll(to: weekID)
+    }
+
+    private func requestScroll(to weekID: String, disablesAnimations: Bool = false) {
+        scrollRequestToken += 1
+        scrollRequest = CalendarScrollRequest(
+            weekID: weekID,
+            token: scrollRequestToken,
+            disablesAnimations: disablesAnimations
+        )
     }
 
     private func resetToCurrentMonth(referenceDate: Date = .now) {
@@ -173,10 +181,9 @@ struct CalendarMenuView: View {
         lastResetDayID = model.today.id
         Task { @MainActor in
             await Task.yield()
-            var transaction = Transaction(animation: nil)
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                scrollToLoadedMonth(year: year, month: month)
+            let monthID = String(format: "%04d-%02d", year, month)
+            if let weekID = model.firstDayWeekIDByMonthID[monthID] {
+                requestScroll(to: weekID, disablesAnimations: true)
             }
         }
     }
@@ -196,7 +203,8 @@ struct CalendarMenuView: View {
                 showWeekNumbers: store.showsWeekNumbers
             )
             CalendarScrollView(
-                scrollPosition: $scrollPosition,
+                initialScrollWeekID: initialScrollWeekID,
+                scrollRequest: scrollRequest,
                 weeks: model.weeks,
                 focusedMonthID: visibleMonth.id,
                 showLunarCalendar: store.calendar.showLunarCalendar,
@@ -210,7 +218,13 @@ struct CalendarMenuView: View {
                 workdayColor: workdayColor,
                 festivalColor: festivalColor,
                 solarTermColor: solarTermColor,
-                onSelectDay: { selectedDay = $0 }
+                onSelectDay: { selectedDay = $0 },
+                onTopWeekChange: { topWeekID in
+                    let newVisibleMonth = month(focusedBy: topWeekID)
+                    if newVisibleMonth.id != visibleMonth.id {
+                        visibleMonth = newVisibleMonth
+                    }
+                }
             )
             Divider()
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
