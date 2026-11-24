@@ -37,7 +37,17 @@ private final class OverlayScrollerStyleView: NSView {
             scrollView.hasVerticalScroller = true
             scrollView.hasHorizontalScroller = false
             scrollView.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-            scrollView.verticalScroller?.controlSize = .small
+            if let existingScroller = scrollView.verticalScroller, !(existingScroller is CalendarOverlayScroller) {
+                let scroller = CalendarOverlayScroller(frame: existingScroller.frame)
+                scroller.controlSize = .small
+                scrollView.verticalScroller = scroller
+            }
         }
     }
+}
+
+private final class CalendarOverlayScroller: NSScroller {
+    override class var isCompatibleWithOverlayScrollers: Bool { true }
+
+    override func drawKnobSlot(in slotRect: NSRect, highlight flag: Bool) {}
 }

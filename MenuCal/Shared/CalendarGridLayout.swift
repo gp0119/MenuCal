@@ -3,7 +3,7 @@ import CoreGraphics
 enum CalendarGridLayout {
     static let dayCellSize: CGFloat = 44
     static let dayContentSize: CGFloat = 38
-    static let rowCount = 6
+    static let rowCount = 5
     static let columnCount = 7
     static let weekNumberColumnWidth: CGFloat = 24
     static let menuLeadingPadding: CGFloat = 16

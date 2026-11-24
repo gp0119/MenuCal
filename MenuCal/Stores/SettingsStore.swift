@@ -47,6 +47,15 @@ final class SettingsStore: ObservableObject {
         }
     }
 
+    @Published var usesTranslucentCalendarBackground: Bool {
+        didSet {
+            defaults.set(
+                usesTranslucentCalendarBackground,
+                forKey: Keys.usesTranslucentCalendarBackground
+            )
+        }
+    }
+
     private enum Keys {
         static let menuBar = "menuBarDisplaySettings"
         static let calendar = "calendarDisplaySettings"
@@ -55,6 +64,7 @@ final class SettingsStore: ObservableObject {
         static let remembersLastDisplayedDate = "remembersLastDisplayedDate"
         static let showsWeekNumbers = "showsWeekNumbers"
         static let appearance = "appearance"
+        static let usesTranslucentCalendarBackground = "usesTranslucentCalendarBackground"
     }
 
     private let defaults: UserDefaults
@@ -77,6 +87,8 @@ final class SettingsStore: ObservableObject {
         appearance = AppAppearance(
             rawValue: defaults.string(forKey: Keys.appearance) ?? ""
         ) ?? .system
+        usesTranslucentCalendarBackground =
+            defaults.object(forKey: Keys.usesTranslucentCalendarBackground) as? Bool ?? true
         Self.applyAppearance(appearance)
     }
 

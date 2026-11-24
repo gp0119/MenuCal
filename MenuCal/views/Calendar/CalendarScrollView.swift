@@ -100,6 +100,7 @@ struct CalendarScrollView: View {
                 }
             }
             .padding(.trailing, CalendarGridLayout.trailingPadding)
+            .overlayScrollerStyle()
             .scrollTargetLayout()
         }
         // Every row is one week of uniform height, so ScrollPosition tracks the
@@ -107,7 +108,6 @@ struct CalendarScrollView: View {
         // single call. The parent maps weeks to months for the header and jumps.
         .scrollPosition($scrollPosition, anchor: .top)
         .scrollBounceBehavior(.basedOnSize)
-        .overlayScrollerStyle()
         .frame(height: CalendarGridLayout.gridHeight)
         .onChange(of: scrollPosition.viewID(type: String.self)) { _, topWeekID in
             onTopWeekChange(topWeekID)

@@ -15,79 +15,72 @@ struct DayCellView: View {
     let solarTermColor: Color
     let onSelect: (CalendarDay) -> Void
 
-    private enum SecondaryTextKind {
-        case festival
-        case solarTerm
-        case lunar
-    }
-
-    private var isInFocusedMonth: Bool {
-        day.monthID == focusedMonthID
-    }
-
-    private var secondaryContent: (text: String, kind: SecondaryTextKind)? {
+    private var secondaryContent: (text: String, markerColor: Color?)? {
         let formatter = LunarDateFormatter.shared
         if showLunarCalendar, let festival = formatter.festivalText(for: day.date) {
-            return (festival, .festival)
+            return (festival, festivalColor)
         }
         if showSolarTerms, let solarTerm = formatter.solarTermText(for: day.date) {
-            return (solarTerm, .solarTerm)
+            return (solarTerm, solarTermColor)
         }
         if showLunarCalendar {
             let lunar = formatter.lunarDay(for: day.date)
-            return lunar.isEmpty ? nil : (lunar, .lunar)
+            return lunar.isEmpty ? nil : (lunar, nil)
         }
         return nil
     }
 
     var body: some View {
+        let secondaryContent = secondaryContent
+        let holidayKind = showPublicHolidays ? day.publicHolidayKind : nil
+        let holidayTint = holidayKind.map { $0 == .holiday ? holidayColor : workdayColor }
+        let isEmphasized = isToday || isSelected || day.monthID == focusedMonthID
+        let cellShape = RoundedRectangle(cornerRadius: 8, style: .continuous)
+
         Button {
             onSelect(day)
         } label: {
-            ZStack(alignment: .topLeading) {
-                if let fill = cellBackgroundFill {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(fill)
-                }
-
-                if isToday, !isSelected {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(accentColor, lineWidth: 1)
-                }
+            VStack(spacing: 1) {
+                Text("\(day.day)")
+                    .font(.body.monospacedDigit())
+                    .fontWeight(isToday || isSelected ? .semibold : .regular)
+                    .foregroundStyle(isEmphasized ? .primary : .secondary)
 
                 if let secondaryContent {
-                    VStack(spacing: 1) {
-                        Text("\(day.day)")
-                            .font(.body)
-                            .foregroundStyle(foregroundStyle)
-                        Text(secondaryContent.text)
-                            .font(.system(size: 9))
-                            .foregroundStyle(
-                                secondaryForegroundStyle(for: secondaryContent.kind)
-                            )
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    Text("\(day.day)")
-                        .font(.body)
-                        .foregroundStyle(foregroundStyle)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-
-                if let badge = holidayBadgeText {
-                    Text(badge)
-                        .font(.system(size: 7))
-                        .foregroundStyle(foregroundStyle)
-                        .padding(.top, 2)
-                        .padding(.leading, 3)
+                    Text(secondaryContent.text)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
             }
+            .opacity(isEmphasized ? 1 : 0.8)
             .frame(
                 width: CalendarGridLayout.dayContentSize,
                 height: CalendarGridLayout.dayContentSize
             )
+            .background(cellBackground(holidayTint: holidayTint), in: cellShape)
+            .overlay {
+                if isToday {
+                    cellShape.strokeBorder(accentColor, lineWidth: 1.5)
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if let markerColor = secondaryContent?.markerColor {
+                    Capsule()
+                        .fill(markerColor)
+                        .frame(width: 10, height: 2)
+                        .padding(.bottom, 1)
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                if let holidayKind {
+                    Text(holidayKind == .holiday ? "休" : "班")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .opacity(isEmphasized ? 1 : 0.8)
+                        .padding([.top, .leading], 2)
+                }
+            }
             .frame(
                 width: CalendarGridLayout.dayCellSize,
                 height: CalendarGridLayout.dayCellSize
@@ -95,73 +88,23 @@ struct DayCellView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(day.formattedDate)
+        .accessibilityValue(
+            [isToday ? "今天" : nil, holidayKind?.displayName, secondaryContent?.text]
+                .compactMap { $0 }
+                .joined(separator: "，")
+        )
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    private var holidayBadgeText: String? {
-        switch displayedHolidayKind {
-        case .holiday: "休"
-        case .workday: "班"
-        case nil: nil
-        }
-    }
-
-    private var displayedHolidayKind: PublicHolidayKind? {
-        showPublicHolidays ? day.publicHolidayKind : nil
-    }
-
-    private var cellBackgroundFill: Color? {
-        if isSelected {
-            if isToday {
-                return accentColor
-            }
-            return Color.gray.opacity(0.2)
-        }
+    private func cellBackground(holidayTint: Color?) -> Color {
         if isToday {
-            return accentColor.opacity(0.12)
+            return accentColor.opacity(isSelected ? 0.24 : 0.12)
         }
-        let emphasis = isInFocusedMonth ? 1.0 : 0.55
-        switch displayedHolidayKind {
-        case .holiday: return holidayColor.opacity(0.14 * emphasis)
-        case .workday: return workdayColor.opacity(0.14 * emphasis)
-        case nil: return nil
+        if let holidayTint {
+            let opacity = day.monthID == focusedMonthID ? 0.14 : 0.08
+            return holidayTint.opacity(isSelected ? 0.24 : opacity)
         }
-    }
-
-    private var foregroundStyle: AnyShapeStyle {
-        if isSelected {
-            if isToday {
-                return AnyShapeStyle(.white)
-            }
-            return AnyShapeStyle(.primary)
-        }
-        if isToday {
-            return AnyShapeStyle(accentColor)
-        }
-        if isInFocusedMonth {
-            switch displayedHolidayKind {
-            case .holiday: return AnyShapeStyle(holidayColor)
-            case .workday: return AnyShapeStyle(workdayColor)
-            case nil: return AnyShapeStyle(.primary)
-            }
-        }
-        return AnyShapeStyle(.tertiary)
-    }
-
-    private func secondaryForegroundStyle(for kind: SecondaryTextKind) -> AnyShapeStyle {
-        if isSelected {
-            if isToday {
-                return AnyShapeStyle(.white)
-            }
-        }
-
-        let emphasis = isInFocusedMonth ? 1.0 : 0.55
-        switch kind {
-        case .festival:
-            return AnyShapeStyle(festivalColor.opacity(emphasis))
-        case .solarTerm:
-            return AnyShapeStyle(solarTermColor.opacity(emphasis))
-        case .lunar:
-            return AnyShapeStyle(isInFocusedMonth ? Color.secondary : Color.secondary.opacity(0.55))
-        }
+        return isSelected ? Color.primary.opacity(0.12) : .clear
     }
 }

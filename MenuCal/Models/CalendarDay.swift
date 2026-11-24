@@ -9,6 +9,17 @@ struct CalendarDay: Identifiable, Hashable, Sendable {
     let isToday: Bool
     let publicHolidayKind: PublicHolidayKind?
 
+    var formattedDate: String {
+        date.formatted(
+            .dateTime
+                .locale(Locale(identifier: "zh_CN"))
+                .year()
+                .month()
+                .day()
+                .weekday(.wide)
+        )
+    }
+
     init(
         date: Date,
         day: Int,

@@ -24,6 +24,7 @@ struct GeneralSettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                Toggle("日历弹窗随背景变色", isOn: $store.usesTranslucentCalendarBackground)
             }
 
             Section {

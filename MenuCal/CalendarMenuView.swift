@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import Sparkle
 import SwiftUI
@@ -31,6 +32,19 @@ private final class CalendarMenuModel: ObservableObject {
 
     func day(matching id: String) -> CalendarDay? {
         data.weeks.lazy.flatMap(\.days).first { $0.id == id }
+    }
+
+    func firstVisibleWeekID(showing day: CalendarDay) -> String? {
+        guard
+            let firstWeekID = firstDayWeekIDByMonthID[day.monthID],
+            let firstWeekIndex = weekIndexByID[firstWeekID],
+            let dayWeekIndex = weeks[firstWeekIndex...].firstIndex(where: { week in
+                week.days.contains { $0.id == day.id }
+            })
+        else { return nil }
+
+        let firstVisibleIndex = max(firstWeekIndex, dayWeekIndex - CalendarGridLayout.rowCount + 1)
+        return weeks[firstVisibleIndex].id
     }
 
     private static func makeData(around date: Date, weekStartDay: WeekStartDay, today: Date) -> Data {
@@ -102,10 +116,11 @@ struct CalendarMenuView: View {
 
         let currentMonth = CalendarGenerator().month(containing: currentDate)
         let initialVisibleMonth = currentMonth ?? model.fallbackMonth
-        initialScrollWeekID = currentMonth.flatMap { model.firstDayWeekIDByMonthID[$0.id] }
+        let today = model.today
+        initialScrollWeekID = model.firstVisibleWeekID(showing: today)
         _visibleMonth = State(initialValue: initialVisibleMonth)
-        _selectedDay = State(initialValue: model.today)
-        _lastResetDayID = State(initialValue: model.today.id)
+        _selectedDay = State(initialValue: today)
+        _lastResetDayID = State(initialValue: today.id)
     }
 
     private var currentDayID: String {
@@ -172,17 +187,13 @@ struct CalendarMenuView: View {
     }
 
     private func resetToCurrentMonth(referenceDate: Date = .now) {
-        let now = referenceDate
-        let components = Calendar.current.dateComponents([.year, .month], from: now)
-        guard let year = components.year, let month = components.month else { return }
-
-        model.regenerate(around: now, weekStartDay: weekStartDay, today: now)
-        selectedDay = model.today
-        lastResetDayID = model.today.id
+        model.regenerate(around: referenceDate, weekStartDay: weekStartDay, today: referenceDate)
+        let today = model.today
+        selectedDay = today
+        lastResetDayID = today.id
         Task { @MainActor in
             await Task.yield()
-            let monthID = String(format: "%04d-%02d", year, month)
-            if let weekID = model.firstDayWeekIDByMonthID[monthID] {
+            if let weekID = model.firstVisibleWeekID(showing: today) {
                 requestScroll(to: weekID, disablesAnimations: true)
             }
         }
@@ -230,6 +241,8 @@ struct CalendarMenuView: View {
                 .padding(.trailing, CalendarGridLayout.trailingPadding)
             SelectedDayDetailView(
                 day: displayedSelectedDay,
+                showLunarCalendar: store.calendar.showLunarCalendar,
+                showSolarTerms: store.calendar.showSolarTerms,
                 showPublicHolidays: store.calendar.showPublicHolidays,
                 holidayColor: holidayColor,
                 workdayColor: workdayColor,
@@ -244,7 +257,9 @@ struct CalendarMenuView: View {
         .padding(.trailing, CalendarGridLayout.menuTrailingPadding)
         .frame(width: CalendarGridLayout.windowWidth(showWeekNumbers: store.showsWeekNumbers))
         .background {
-            if #unavailable(macOS 26) {
+            if !store.usesTranslucentCalendarBackground {
+                Color(nsColor: .windowBackgroundColor)
+            } else if #unavailable(macOS 26) {
                 Rectangle().fill(.regularMaterial)
             }
         }

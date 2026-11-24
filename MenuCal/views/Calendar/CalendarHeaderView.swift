@@ -43,12 +43,7 @@ struct CalendarHeaderView: View {
 
             Spacer()
 
-            Button(action: onGoToToday) {
-                Image(systemName: "arrow.uturn.backward")
-            }
-            .buttonStyle(HoverIconButtonStyle())
-            .accessibilityLabel("返回今天")
-            .help("返回今天")
+            todayButton
 
             Menu {
                 Button {
@@ -86,6 +81,20 @@ struct CalendarHeaderView: View {
         }
         .onReceive(updater.publisher(for: \.canCheckForUpdates)) {
             canCheckForUpdates = $0
+        }
+    }
+
+    @ViewBuilder
+    private var todayButton: some View {
+        let button = Button("今天", action: onGoToToday)
+            .buttonBorderShape(.capsule)
+            .accessibilityLabel("返回今天")
+            .help("返回今天")
+
+        if #available(macOS 26, *) {
+            button.buttonStyle(.glass)
+        } else {
+            button.buttonStyle(.bordered)
         }
     }
 
@@ -212,12 +221,13 @@ private struct MonthYearPickerView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)
                             .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(isSelected ? accentColor.opacity(0.2) : Color.clear)
+                                isSelected ? accentColor.opacity(0.18) : .clear,
+                                in: RoundedRectangle(cornerRadius: 6)
                             )
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
         }
