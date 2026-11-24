@@ -1,7 +1,7 @@
 import Foundation
 
 /// 查表返回国务院公布的法定放假日与调休上班日。
-/// 数据来自打包的 `PublicHolidays.json`（2024–2026，来源 holiday-cn / 国务院办公厅通知）。
+/// 数据来自打包的 `PublicHolidays.json`（来源 holiday-cn / 国务院办公厅通知）。
 struct HolidayCalendarService {
     static let shared = HolidayCalendarService()
 

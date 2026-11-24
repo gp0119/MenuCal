@@ -66,3 +66,13 @@ sudo xattr -rd com.apple.quarantine "/Applications/MenuCal.app"
 - **通用**：登录时启动、时间格式
 - **菜单栏**：显示内容、顺序、图标样式和秒钟
 - **日历**：农历、节气和每周开始日期
+
+## 更新节假日数据
+
+需要 Python 3.9 或更高版本。从项目根目录运行以下命令，按北京时间导入下一年的放假和调休上班安排。
+
+```bash
+python3 scripts/update_public_holidays.py
+```
+
+也可传入公告年份，例如 `python3 scripts/update_public_holidays.py 2027`。脚本将公告记录按日期合并到 `MenuCal/Resources/PublicHolidays.json`，重新构建应用后即可使用新数据。数据来自 [holiday-cn](https://github.com/NateScarlet/holiday-cn)。
