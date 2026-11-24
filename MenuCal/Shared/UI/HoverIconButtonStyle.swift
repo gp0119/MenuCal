@@ -9,15 +9,23 @@ struct HoverIconButtonStyle: ButtonStyle {
     @State private var isHovered = false
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        let label = configuration.label
             .font(.system(size: 14))
-            .foregroundStyle(isHovered ? .primary : .secondary)
             .frame(width: 28, height: 28)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isHovered ? Color.primary.opacity(0.08) : Color.clear)
-            )
-            .opacity(configuration.isPressed ? 0.7 : 1)
-            .onHover { isHovered = $0 }
+
+        if #available(macOS 26, *) {
+            label
+                .contentShape(Circle())
+                .glassEffect(.regular.interactive(), in: .circle)
+        } else {
+            label
+                .foregroundStyle(isHovered ? .primary : .secondary)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(isHovered ? Color.primary.opacity(0.08) : Color.clear)
+                )
+                .opacity(configuration.isPressed ? 0.7 : 1)
+                .onHover { isHovered = $0 }
+        }
     }
 }

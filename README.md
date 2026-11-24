@@ -9,6 +9,7 @@ MenuCal 是一个使用 SwiftUI 开发的 macOS 菜单栏日历。点击菜单�
 ## 功能
 
 - 菜单栏快速查看日历
+- macOS 26 及以上支持原生 Liquid Glass 日历控件
 - 显示农历和二十四节气
 - 支持星期日或星期一作为每周第一天
 - 快速返回当前月份
@@ -28,6 +29,7 @@ MenuCal 是一个使用 SwiftUI 开发的 macOS 菜单栏日历。点击菜单�
 ## 系统要求
 
 - macOS 15.0 或更高版本
+- 从源码构建需要包含 macOS 26 SDK 或更新版本的 Xcode
 - Apple Silicon 或 Intel Mac。发布包建议构建为 Universal，以同时包含 `arm64` 和 `x86_64` 架构
 
 ## 下载

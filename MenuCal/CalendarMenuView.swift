@@ -243,7 +243,11 @@ struct CalendarMenuView: View {
         .padding(.bottom, 16)
         .padding(.trailing, CalendarGridLayout.menuTrailingPadding)
         .frame(width: CalendarGridLayout.windowWidth(showWeekNumbers: store.showsWeekNumbers))
-        .background(.regularMaterial)
+        .background {
+            if #unavailable(macOS 26) {
+                Rectangle().fill(.regularMaterial)
+            }
+        }
         .onChange(of: currentDayID) { _, _ in
             if !store.remembersLastDisplayedDate {
                 resetToCurrentMonth(referenceDate: currentDate)

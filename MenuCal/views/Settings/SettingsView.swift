@@ -10,25 +10,21 @@ import SwiftUI
 struct SettingsView: View {
     var body: some View {
         TabView {
-            GeneralSettingsView()
-                .tabItem {
-                    Label("通用", systemImage: "gearshape")
-                }
+            Tab("通用", systemImage: "gearshape") {
+                GeneralSettingsView()
+            }
 
-            // WindowSettingsView()
-            //     .tabItem {
-            //         Label("窗口", systemImage: "macwindow")
-            //     }
+            // Tab("窗口", systemImage: "macwindow") {
+            //     WindowSettingsView()
+            // }
 
-            MenuBarSettingsView()
-                .tabItem {
-                    Label("菜单栏", systemImage: "menubar.rectangle")
-                }
+            Tab("菜单栏", systemImage: "menubar.rectangle") {
+                MenuBarSettingsView()
+            }
 
-            CalendarSettingsView()
-                .tabItem {
-                    Label("日历", systemImage: "calendar")
-                }
+            Tab("日历", systemImage: "calendar") {
+                CalendarSettingsView()
+            }
         }
         .frame(width: 440, height: 480)
     }
